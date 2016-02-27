@@ -40,7 +40,7 @@ init()
 	echo " What Architecture?"
 	echo "   1) 32-bit"
 	echo "   2) 64-bit (Default)"
-	read -p "Choice: " Arch
+	read -n 1 -p "Choice: " Arch;echo
 	if [ "$Arch" = "" ]
 	then
 		Arch=2
@@ -90,7 +90,7 @@ do
 	if sufficient "$URL"
 	then
 		stats
-		read -n 1 -p "Install? [y/n] " inst
+		read -n 1 -p "Install? [y/n] " inst;echo
 		if [ "$inst" = "y" ]
 		then
 			retrieve "$URL" "$Out" "$Name" "$Post"
