@@ -68,30 +68,46 @@ pfilter()
 		fi
 	done
 }
+ProgressBar()
+{
+	let _progress=(${1}*100/${2}*100)/100
+	let _done=(${_progress}*4)/10
+	let _left=40-$_done
+	_fill=$(printf "%${_done}s")
+	_empty=$(printf "%${_left}s")
+	printf "\r${_progress}%% [${_fill// /=}${_empty// /-}]"
+}
 pmv()
 {
-   strace -q -ewrite mv -- "${1}" "${2}" 2>&1 \
-      | awk '{
-        count += $NF
-            if (count % 10 == 0) {
-               percent = count / total_size * 100
-               printf "%3d%% [", percent
-               for (i=0;i<=percent;i++)
-                  printf "="
-               printf ">"
-               for (i=percent;i<100;i++)
-                  printf " "
-               printf "]\r"
-            }
-         }
-         END { print "" }' total_size=$(stat -c '%s' "${1}") count=0
+	echo "Preparing to move..."
+	orig_size=$(stat -c %s $1)
+	dest_size=0
+	echo "Moving..."
+	mv "$1" "$2" &
+	pid=$!
+	while [ $orig_size -gt $dest_size ]
+	do
+		if kill -0 $pid
+		then
+			dest_size=$(stat -c %s $2)
+			pct=$((( 100 * $dest_size ) / $orig_size ))
+			ProgressBar $pct 100
+		else
+			echo
+			echo "It seems mv died."
+			echo "This means it either failed or finished between checks. Be sure to check the integrity of the file."
+			return 1
+		fi
+		sleep 0.5
+	done
+	echo
+	return 0
 }
 retrieve()
 {
 	cd "$Temp"
 	echo "Downloading..."
 	wget -O download "$1" --progress=bar:force 2>&1 | pfilter
-	echo "Moving..."
 	if [ "$Post" = 0 ]
 	then
 		pmv download "${Root}/_ISO/${2}/${3}.iso"
