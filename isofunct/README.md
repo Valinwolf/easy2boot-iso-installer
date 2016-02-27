@@ -2,7 +2,7 @@
 
  
 
-**To add a single ISO to the list:**
+#### To add a single ISO to the list:
 
 1. Copy templates/arch-less to the base isofunct directory
 2. Rename arch-less to what ever you want as long as it ends in .inc
@@ -12,7 +12,7 @@
 
  
 
-**To add multi-arch distro ISOs to the list:**
+#### To add multi-arch distro ISOs to the list:
 
 1. Copy templates/multi-arch to the base isofunct directory
 2. Rename multi-arch to what ever you want as long as it ends in .inc
