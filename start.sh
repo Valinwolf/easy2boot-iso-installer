@@ -80,7 +80,7 @@ ProgressBar()
 pmv()
 {
 	echo "Preparing to move..."
-	orig_size=$(stat -c %s $1)
+	orig_size=$(stat -c %s "$1")
 	dest_size=0
 	echo "Moving..."
 	mv "$1" "$2" &
@@ -89,7 +89,7 @@ pmv()
 	do
 		if kill -0 $pid
 		then
-			dest_size=$(stat -c %s $2)
+			dest_size=$(stat -c %s "$2")
 			pct=$((( 100 * $dest_size ) / $orig_size ))
 			ProgressBar $pct 100
 		else
