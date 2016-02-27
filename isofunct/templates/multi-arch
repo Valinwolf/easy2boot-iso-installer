@@ -1,0 +1,14 @@
+#NAME
+Out="MENU"
+Name="NAME"
+
+if [ "$Arch" = 1 ]
+then
+	URL="I386_URL"
+	Append="32-bit"
+elif [ "$Arch" = 2 ]
+then
+	URL="AMD64_URL"
+	Append="64-bit"
+fi
+Post=0
