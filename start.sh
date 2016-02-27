@@ -46,6 +46,28 @@ stats()
 	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
 	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
 }
+pfilter()
+{
+	local flag=false c count cr=$'\r' nl=$'\n'
+	while IFS='' read -d '' -rn 1 c
+	do
+		if $flag
+		then
+			printf '%c' "$c"
+		else
+			if [[ $c != $cr && $c != $nl ]]
+			then
+				count=0
+			else
+				((count++))
+				if ((count > 1))
+				then
+					flag=true
+				fi
+			fi
+		fi
+	done
+}
 pmv()
 {
    strace -q -ewrite mv -- "${1}" "${2}" 2>&1 \
@@ -68,7 +90,7 @@ retrieve()
 {
 	cd "$Temp"
 	echo "Downloading..."
-	curl -o download "$1"
+	wget -O download "$1" --progress=bar:force 2>&1 | pfilter
 	echo "Moving..."
 	if [ "$Post" = 0 ]
 	then
