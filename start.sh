@@ -25,7 +25,7 @@ init()
 	read -p "Choice: " Arch
 	if [ "$Arch" = "" ]
 	then
-		Arch = 2
+		Arch=2
 	fi
 }
 retrieve()
