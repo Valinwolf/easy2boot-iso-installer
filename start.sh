@@ -13,21 +13,6 @@ DAvail=0
 TAvail=0
 
 ### Helper Functions
-sleepydot()
-{
-	sleep 1
-	echo -n "."
-	sleep 1
-	echo -n "."
-	sleep 1
-	echo "."
-}
-stats()
-{
-	numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
-	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
-	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
-}
 init()
 {
 	read -p "Path to E2B drive: (Default = /media/root/E2B) " Root
@@ -46,11 +31,48 @@ init()
 		Arch=2
 	fi
 }
+sleepydot()
+{
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo "."
+}
+stats()
+{
+	numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
+	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
+	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
+}
+pfilter()
+{
+    local flag=false c count cr=$'\r' nl=$'\n'
+    while IFS='' read -d '' -rn 1 c
+    do
+        if $flag
+        then
+            printf '%c' "$c"
+        else
+            if [[ $c != $cr && $c != $nl ]]
+            then
+                count=0
+            else
+                ((count++))
+                if ((count > 1))
+                then
+                    flag=true
+                fi
+            fi
+        fi
+    done
+}
 retrieve()
 {
 	cd "$Temp"
 	echo "Downloading..."
-	wget -q "$1"
+	wget --progress=bar:force "$1" 2>&1 | 
 	if [ "$Post" = 0 ]
 	then
 		mv * "${Root}/_ISO/${2}/${3}.iso"
