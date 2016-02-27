@@ -123,3 +123,4 @@ do
 		sleepydot
 	fi
 done
+rm -r "$Temp"
