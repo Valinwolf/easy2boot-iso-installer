@@ -123,4 +123,6 @@ do
 		sleepydot
 	fi
 done
+echo "Cleaning up... "
 rm -r "$Temp"
+echo "DONE"
