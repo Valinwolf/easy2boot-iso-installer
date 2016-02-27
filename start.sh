@@ -1,5 +1,6 @@
 #!/bin/bash
 ### Variables
+Norm=`pwd`
 Temp=`mktemp -d`
 Root=/media/root/E2B
 Arch=2
@@ -12,6 +13,21 @@ DAvail=0
 TAvail=0
 
 ### Helper Functions
+sleepydot()
+{
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo -n "."
+	sleep 1
+	echo "."
+}
+stats()
+{
+	numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
+	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
+	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
+}
 init()
 {
 	read -p "Path to E2B drive: (Default = /media/root/E2B) " Root
@@ -32,30 +48,31 @@ init()
 }
 retrieve()
 {
-	rm -r "$Temp"&&mkdir "$Temp"
 	cd "$Temp"
+	echo "Downloading..."
 	wget -q "$1"
 	if [ "$Post" = 0 ]
 	then
 		mv * "${Root}/_ISO/${2}/${3}.iso"
 	else
 		find . -type f -exec mv '{}' ./compressed \;
-		eval $4 ./compressed
+		echo "Extracting..."
+		eval $4 ./compressed &> /dev/null
 		rm compressed
 		dest="${Root}/_ISO/${2}/${3}.iso"
 		find . -iname '*.iso' -exec mv '{}' "$dest" \;
 	fi
-	cd "${Root}/_ISO"
+	cd "$Norm"
+	rm -r "$Temp"&&mkdir "$Temp"
+	echo -n "DONE"
+	sleepydot
 }
 sufficient()
 {
 	DAvail=`stat -f --printf="%a * %s\n" "$Root" | bc`
 	TAvail=`stat -f --printf="%a * %s\n" "$Temp" | bc`
 	Size=`curl -sIL $1 | grep -i Content-Length | awk '{print $2}' | tr -d '\r'`
-	if [ "$DAvail" -le "$Size" ]
-	then
-		return 1
-	elif [ "$TAvail" -le "$Size" ]
+	if [ "$DAvail" -le "$Size" ] || [ "$TAvail" -le "$Size" ]
 	then
 		return 1
 	else
@@ -72,24 +89,15 @@ do
 	echo "$section"
 	if sufficient "$URL"
 	then
-		numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
-		numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
-		numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
+		stats
 		read -n 1 -p "Install? [y/n] " inst
 		if [ "$inst" = "y" ]
 		then
 			retrieve "$URL" "$Out" "$Name" "$Post"
 		fi
 	else
-		numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
-		numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
-		numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
+		stats
 		echo -n "Insufficient space, skipping"
-		sleep 1
-		echo -n "."
-		sleep 1
-		echo -n "."
-		sleep 1
-		echo "."
+		sleepydot
 	fi
 done
