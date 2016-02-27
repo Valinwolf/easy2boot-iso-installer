@@ -8,6 +8,8 @@ Size=0
 Append=""
 URL=""
 Out=""
+DAvail=0
+TAvail=0
 
 ### Helper Functions
 init()
@@ -47,13 +49,13 @@ retrieve()
 }
 sufficient()
 {
-	ra=`df "$Root"|tail -n 1|awk '{print $4}'`
-	ta=`df "$Temp"|tail -n 1|awk '{print $4}'`
-	sn=`curl -sI $1 | grep -i Content-Length | awk '{print $2}' | tr -d '\r'`
-	if [ "$ra" -le "$sn" ]
+	DAvail=`df "$Root"|tail -n 1|awk '{print $4}'`
+	TAvail=`df "$Temp"|tail -n 1|awk '{print $4}'`
+	Size=`curl -sI $1 | grep -i Content-Length | awk '{print $2}' | tr -d '\r'`
+	if [ "$DAvail" -le "$Size" ]
 	then
 		echo "Insufficient space on install device..."
-	elif [ "$ta" -le "$sn" ]
+	elif [ "$TAvail" -le "$Size" ]
 	then
 		echo "Insufficient space in temporary folder..."
 	else
@@ -65,14 +67,21 @@ sufficient()
 init
 for i in isofunct/*.inc
 do
+	clear
 	section=`head -n 1 "$i" | sed 's/#//'`
-	read -n 1 -p "Do you wish to install the $section ISO? [y/n] " inst
-	if [ "$inst" = "y" ]
+	. $i
+	echo "$section"
+	numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
+	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
+	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
+	if sufficient "$URL"
 	then
-		. $i
-		if sufficient "$URL"
+		read -n 1 -p "Install? [y/n] " inst
+		if [ "$inst" = "y" ]
 		then
 			retrieve "$URL" "$Out" "$Name" "$Post"
 		fi
+	else
+		echo "Skipping."
 	fi
 done
