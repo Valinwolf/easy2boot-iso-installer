@@ -49,9 +49,9 @@ retrieve()
 }
 sufficient()
 {
-	DAvail=`df "$Root"|tail -n 1|awk '{print $4}'`
-	TAvail=`df "$Temp"|tail -n 1|awk '{print $4}'`
-	Size=`curl -sI $1 | grep -i Content-Length | awk '{print $2}' | tr -d '\r'`
+	DAvail=`stat -f --printf="%a * %s\n" "$Root" | bc`
+	TAvail=`stat -f --printf="%a * %s\n" "$Temp" | bc`
+	Size=`curl -sIL $1 | grep -i Content-Length | awk '{print $2}' | tr -d '\r'`
 	if [ "$DAvail" -le "$Size" ]
 	then
 		echo "Insufficient space on install device..."
@@ -82,6 +82,12 @@ do
 			retrieve "$URL" "$Out" "$Name" "$Post"
 		fi
 	else
-		echo "Skipping."
+		echo -n "Skipping"
+		sleep 1
+		echo -n "."
+		sleep 1
+		echo -n "."
+		sleep 1
+		echo "."
 	fi
 done
