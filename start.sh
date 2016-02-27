@@ -83,7 +83,7 @@ pmv()
 	orig_size=$(stat -c %s "$1")
 	dest_size=0
 	echo "Moving..."
-	mv "$1" "$2" &
+	mv "$1" "$2" &> /dev/null &
 	pid=$!
 	while [ $orig_size -gt $dest_size ]
 	do
