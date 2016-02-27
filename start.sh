@@ -46,43 +46,39 @@ stats()
 	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
 	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
 }
-pfilter()
+pmv()
 {
-    local flag=false c count cr=$'\r' nl=$'\n'
-    while IFS='' read -d '' -rn 1 c
-    do
-        if $flag
-        then
-            printf '%c' "$c"
-        else
-            if [[ $c != $cr && $c != $nl ]]
-            then
-                count=0
-            else
-                ((count++))
-                if ((count > 1))
-                then
-                    flag=true
-                fi
-            fi
-        fi
-    done
+   strace -q -ewrite mv -- "${1}" "${2}" 2>&1 \
+      | awk '{
+        count += $NF
+            if (count % 10 == 0) {
+               percent = count / total_size * 100
+               printf "%3d%% [", percent
+               for (i=0;i<=percent;i++)
+                  printf "="
+               printf ">"
+               for (i=percent;i<100;i++)
+                  printf " "
+               printf "]\r"
+            }
+         }
+         END { print "" }' total_size=$(stat -c '%s' "${1}") count=0
 }
 retrieve()
 {
 	cd "$Temp"
 	echo "Downloading..."
-	wget --progress=bar:force "$1" 2>&1 | pfilter
+	curl -o download "$1"
+	echo "Moving..."
 	if [ "$Post" = 0 ]
 	then
-		mv * "${Root}/_ISO/${2}/${3}.iso"
+		pmv download "${Root}/_ISO/${2}/${3}.iso"
 	else
-		find . -type f -exec mv '{}' ./compressed \;
 		echo "Extracting..."
-		eval $4 ./compressed &> /dev/null
-		rm compressed
+		eval $4 ./download &> /dev/null
+		rm download
 		dest="${Root}/_ISO/${2}/${3}.iso"
-		find . -iname '*.iso' -exec mv '{}' "$dest" \;
+		find . -iname '*.iso' -exec pmv '{}' "$dest" \;
 	fi
 	cd "$Norm"
 	rm -r "$Temp"&&mkdir "$Temp"
