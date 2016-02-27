@@ -72,7 +72,7 @@ retrieve()
 {
 	cd "$Temp"
 	echo "Downloading..."
-	wget --progress=bar:force "$1" 2>&1 | 
+	wget --progress=bar:force "$1" 2>&1 | pfilter
 	if [ "$Post" = 0 ]
 	then
 		mv * "${Root}/_ISO/${2}/${3}.iso"
