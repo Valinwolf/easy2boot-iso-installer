@@ -54,14 +54,13 @@ sufficient()
 	Size=`curl -sIL $1 | grep -i Content-Length | awk '{print $2}' | tr -d '\r'`
 	if [ "$DAvail" -le "$Size" ]
 	then
-		echo "Insufficient space on install device..."
+		return 1
 	elif [ "$TAvail" -le "$Size" ]
 	then
-		echo "Insufficient space in temporary folder..."
+		return 1
 	else
 		return 0
 	fi
-	return 1
 }
 
 init
@@ -71,18 +70,21 @@ do
 	section=`head -n 1 "$i" | sed 's/#//'`
 	. $i
 	echo "$section"
-	numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
-	numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
-	numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
 	if sufficient "$URL"
 	then
+		numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
+		numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
+		numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
 		read -n 1 -p "Install? [y/n] " inst
 		if [ "$inst" = "y" ]
 		then
 			retrieve "$URL" "$Out" "$Name" "$Post"
 		fi
 	else
-		echo -n "Skipping"
+		numfmt --to=iec-i --suffix=B --format="Size: %f" $Size
+		numfmt --to=iec-i --suffix=B --format="Temp Space: %f" $TAvail
+		numfmt --to=iec-i --suffix=B --format="Drive Space: %f" $DAvail
+		echo -n "Insufficient space, skipping"
 		sleep 1
 		echo -n "."
 		sleep 1
