@@ -33,11 +33,11 @@ init()
 }
 sleepydot()
 {
-	sleep 1
+	sleep 0.5
 	echo -n "."
-	sleep 1
+	sleep 0.5
 	echo -n "."
-	sleep 1
+	sleep 0.5
 	echo "."
 }
 stats()
@@ -143,18 +143,24 @@ do
 	section=`head -n 1 "$i" | sed 's/#//'`
 	. $i
 	echo "$section"
-	if sufficient "$URL"
+	if [ -f "${Root}/_ISO/${Out}/${Name}.iso" ]
 	then
-		stats
-		read -n 1 -p "Install? [y/n] " inst;echo
-		if [ "$inst" = "y" ]
-		then
-			retrieve "$URL" "$Out" "$Name" "$Post"
-		fi
-	else
-		stats
-		echo -n "Insufficient space, skipping"
+		echo -n "Installed"
 		sleepydot
+	else
+		if sufficient "$URL"
+		then
+			stats
+			read -n 1 -p "Install? [y/n] " inst;echo
+			if [ "$inst" = "y" ]
+			then
+				retrieve "$URL" "$Out" "$Name" "$Post"
+			fi
+		else
+			stats
+			echo -n "Insufficient space, skipping"
+			sleepydot
+		fi
 	fi
 done
 echo "Cleaning up... "
